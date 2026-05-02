@@ -1,0 +1,62 @@
+version: "3.9"
+
+# ── Red interna para comunicación entre servicios ────────────────────────────
+networks:
+  panicbutton-dev-network:
+    driver: bridge
+
+# ── Volúmenes persistentes ────────────────────────────────────────────────────
+volumes:
+  panicbutton-mysql-data:
+    driver: local
+
+services:
+
+  # ── MySQL 8 ────────────────────────────────────────────────────────────────
+  panicbutton-development-mysqldb:
+    image: mysql:8.0
+    container_name: panicbutton-development-mysqldb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      # MYSQL_USER/MYSQL_PASSWORD solo se usan si DB_USER != root
+      # Con DB_USER=root la conexión va directo con MYSQL_ROOT_PASSWORD
+    ports:
+      - "3316:3306"        # Host:3316 → no colisionar con MySQL local (3306)
+    volumes:
+      - panicbutton-mysql-data:/var/lib/mysql
+    networks:
+      - panicbutton-dev-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ── Backend (Express + TypeORM + ts-node) ─────────────────────────────────
+  panicbutton-development-api:
+    build:
+      context: .
+      dockerfile: dockerfile.development
+    container_name: panicbutton-development-api
+    restart: unless-stopped
+    env_file:
+      - .env.development
+    environment:
+      # Sobreescribir host para que apunte al contenedor MySQL
+      DB_HOST: panicbutton-development-mysqldb
+      DB_PORT: "3306"
+    ports:
+      - "${PORT:-3000}:3000"
+    volumes:
+      # Hot-reload: montar src/ para que nodemon detecte cambios
+      - ./src:/app/src:delegated
+      # Evitar sobreescribir node_modules del contenedor con los del host
+      - /app/node_modules
+    networks:
+      - panicbutton-dev-network
+    depends_on:
+      panicbutton-development-mysqldb:
+        condition: service_healthy

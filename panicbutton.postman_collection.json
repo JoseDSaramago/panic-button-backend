@@ -1,0 +1,296 @@
+{
+  "info": {
+    "name": "PanicButton API",
+    "_postman_id": "panicbutton-api-collection",
+    "description": "Colección completa de la API de Panic Button.\n\n**Setup rápido:**\n1. Importa esta colección\n2. Importa el environment `panicbutton.postman_environment.json`\n3. Ejecuta **Auth / Register** y luego **Auth / Login** — el token se guarda automáticamente\n4. Todos los endpoints protegidos usan `{{token}}` de forma automática",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  pm.environment.set('userId', json.userId);",
+                  "  console.log('Usuario registrado:', json.userId);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"+521234567890\",\n  \"alias\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"password\": \"password1234\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api","auth","register"] }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  pm.environment.set('token', json.token);",
+                  "  pm.environment.set('refreshToken', json.refreshToken);",
+                  "  console.log('Token guardado en environment');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"+521234567890\",\n  \"password\": \"password1234\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api","auth","login"] }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  pm.environment.set('token', json.token);",
+                  "  pm.environment.set('refreshToken', json.refreshToken);",
+                  "  console.log('Token rotado y guardado');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"{{refreshToken}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/refresh", "host": ["{{baseUrl}}"], "path": ["api","auth","refresh"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get Me",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/users/me", "host": ["{{baseUrl}}"], "path": ["api","users","me"] }
+          }
+        },
+        {
+          "name": "Update Me",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"alias\": \"Nuevo Alias\",\n  \"panic_message\": \"¡Necesito ayuda urgente!\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/users/me", "host": ["{{baseUrl}}"], "path": ["api","users","me"] }
+          }
+        },
+        {
+          "name": "Delete Me (Soft Delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/users/me", "host": ["{{baseUrl}}"], "path": ["api","users","me"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Emergency Contacts",
+      "item": [
+        {
+          "name": "List Contacts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/contacts", "host": ["{{baseUrl}}"], "path": ["api","contacts"] },
+            "description": "Lista los contactos ordenados por notify_order."
+          }
+        },
+        {
+          "name": "Create Contact",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  pm.environment.set('contactId', json.contact.id);",
+                  "  console.log('Contacto creado:', json.contact.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"María\",\n  \"apellido\": \"García López\",\n  \"alias\": \"Mamá\",\n  \"parentesco\": \"Madre\",\n  \"whatsapp_number\": \"+521234567891\",\n  \"notify_order\": 1\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/contacts", "host": ["{{baseUrl}}"], "path": ["api","contacts"] },
+            "description": "Máximo 5 contactos por usuario (error 422 si ya tiene 5).\n\nCampos obligatorios: nombre, apellido, alias, whatsapp_number, notify_order\nCampo opcional: parentesco"
+          }
+        },
+        {
+          "name": "Update Contact",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"María\",\n  \"apellido\": \"García López\",\n  \"alias\": \"Mamá actualizado\",\n  \"parentesco\": \"Madre\",\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/contacts/{{userId}}/{{contactId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","contacts","{{userId}}","{{contactId}}"]
+            },
+            "description": "Actualiza un contacto. La URL incluye el user_uuid del dueño y el contact_id.\n\nTodos los campos del body son opcionales."
+          }
+        },
+        {
+          "name": "Delete Contact",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/contacts/{{userId}}/{{contactId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","contacts","{{userId}}","{{contactId}}"]
+            },
+            "description": "Elimina un contacto. La URL incluye el user_uuid del dueño y el contact_id."
+          }
+        },
+        {
+          "name": "Reorder Contacts",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  { \"id\": \"{{contactId}}\", \"notify_order\": 2 }\n]"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/contacts/reorder",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","contacts","reorder"]
+            },
+            "description": "Reordena múltiples contactos en una sola transacción."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Panic",
+      "item": [
+        {
+          "name": "Trigger Panic",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  pm.environment.set('panicEventId', json.event_id);",
+                  "  console.log('Pánico disparado. Event ID:', json.event_id);",
+                  "  console.log('Notificados:', json.notified, '| Fallidos:', json.failed);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lat\": 19.432608,\n  \"lng\": -99.133209,\n  \"device_os\": \"iOS\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/panic/trigger", "host": ["{{baseUrl}}"], "path": ["api","panic","trigger"] },
+            "description": "⚠️ Rate limit: máximo 3 veces cada 10 minutos por usuario."
+          }
+        },
+        {
+          "name": "Test Panic",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lat\": 19.432608,\n  \"lng\": -99.133209,\n  \"device_os\": \"Android\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/panic/test", "host": ["{{baseUrl}}"], "path": ["api","panic","test"] },
+            "description": "Igual que trigger pero el alias lleva prefijo [TEST]."
+          }
+        },
+        {
+          "name": "Panic History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/panic/history", "host": ["{{baseUrl}}"], "path": ["api","panic","history"] }
+          }
+        }
+      ]
+    }
+  ]
+}

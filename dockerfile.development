@@ -1,0 +1,25 @@
+# ── Dockerfile para entorno de desarrollo ────────────────────────────────────
+# Usa ts-node + nodemon para hot-reload sin compilar a /dist
+FROM node:20-alpine
+
+# Instalar dependencias del sistema necesarias para bcrypt y mysql2
+RUN apk add --no-cache python3 make g++
+
+WORKDIR /app
+
+# Copiar manifiestos primero para aprovechar la caché de capas de Docker
+COPY package*.json ./
+COPY tsconfig.json ./
+COPY nodemon.json ./
+
+# Instalar TODAS las dependencias (prod + dev) para poder usar ts-node
+RUN npm install
+
+# Copiar el código fuente
+COPY src/ ./src/
+
+# Exponer el puerto de la API
+EXPOSE 3000
+
+# Arrancar en modo desarrollo con hot-reload
+CMD ["npm", "run", "dev"]

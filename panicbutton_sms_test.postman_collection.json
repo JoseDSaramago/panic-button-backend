@@ -1,0 +1,157 @@
+{
+  "info": {
+    "name": "PanicButton — SMS Test",
+    "_postman_id": "panicbutton-sms-test",
+    "description": "Flujo mínimo para probar el envío de SMS vía Brevo.\n\n1. Register\n2. Login (guarda token automáticamente)\n3. Create Contact (guarda contactId automáticamente)\n4. Test Panic (dispara WhatsApp + SMS)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "1 - Register",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 201) {",
+              "  const json = pm.response.json();",
+              "  pm.environment.set('userId', json.userId);",
+              "  console.log('✅ Usuario registrado. userId:', json.userId);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": { "type": "noauth" },
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"phone_number\": \"521XXXXXXXXXX\",\n  \"first_name\": \"Jose\",\n  \"last_name\": \"Saramago\",\n  \"alias\": \"Pepe\",\n  \"email\": \"test@example.com\",\n  \"password\": \"password1234\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/register",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "register"]
+        }
+      }
+    },
+    {
+      "name": "2 - Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "  const json = pm.response.json();",
+              "  pm.environment.set('token', json.token);",
+              "  pm.environment.set('refreshToken', json.refreshToken);",
+              "  console.log('✅ Token guardado');",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": { "type": "noauth" },
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"phone_number\": \"521XXXXXXXXXX\",\n  \"password\": \"password1234\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "3 - Create Contact",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 201) {",
+              "  const json = pm.response.json();",
+              "  pm.environment.set('contactId', json.contact.contact_uuid);",
+              "  console.log('✅ Contacto creado. contact_uuid:', json.contact.contact_uuid);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"first_name\": \"Ana\",\n  \"last_name\": \"Lopez\",\n  \"alias\": \"Mamá\",\n  \"relationship\": \"Madre\",\n  \"whatsapp_number\": \"521XXXXXXXXXX\",\n  \"notify_order\": 1\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/contacts",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "contacts"]
+        },
+        "description": "Pon en whatsapp_number el número real que recibirá el SMS."
+      }
+    },
+    {
+      "name": "4 - Test Panic (dispara SMS + WhatsApp)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "  const json = pm.response.json();",
+              "  pm.environment.set('panicEventId', json.event_id);",
+              "  console.log('✅ Pánico disparado. event_id:', json.event_id);",
+              "  console.log('Notificados:', json.notified, '| Fallidos:', json.failed);",
+              "  json.details.forEach(d => {",
+              "    console.log('--- Contacto:', d.alias);",
+              "    console.log('    WhatsApp:', d.whatsapp.success ? '✅ ' + d.whatsapp.message_id : '❌ ' + d.whatsapp.error);",
+              "    console.log('    SMS:     ', d.sms.success ? '✅ ' + d.sms.message_id : '❌ ' + d.sms.error);",
+              "  });",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"lat\": 19.432608,\n  \"lng\": -99.133209,\n  \"device_os\": \"iOS\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/panic/test",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "panic", "test"]
+        },
+        "description": "Usa /test para no necesitar panic_enabled. El alias lleva prefijo [TEST].\nRevisa la consola de Postman para ver el resultado por canal (WhatsApp y SMS)."
+      }
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "token", "value": "" },
+    { "key": "refreshToken", "value": "" },
+    { "key": "userId", "value": "" },
+    { "key": "contactId", "value": "" },
+    { "key": "panicEventId", "value": "" }
+  ]
+}

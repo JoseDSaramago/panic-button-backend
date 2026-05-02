@@ -1,0 +1,11 @@
+node_modules
+dist
+.env
+.env.*
+logs
+*.log
+.git
+.gitignore
+README.md
+*.postman_collection.json
+*.postman_environment.json
