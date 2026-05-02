@@ -1,0 +1,44 @@
+# ── Dockerfile para entorno de producción ────────────────────────────────────
+# Multi-stage build:
+#   stage 1 (builder) — compila TypeScript a /dist
+#   stage 2 (runtime) — imagen final solo con node + /dist, sin devDependencies ni código fuente
+
+# ── Stage 1: Builder ──────────────────────────────────────────────────────────
+FROM node:20-alpine AS builder
+
+RUN apk add --no-cache python3 make g++
+
+WORKDIR /app
+
+COPY package*.json ./
+COPY tsconfig.json ./
+
+# Instalar todas las dependencias (incluyendo devDependencies para compilar)
+RUN npm ci
+
+COPY src/ ./src/
+
+# Compilar TypeScript → dist/
+RUN npm run build
+
+# ── Stage 2: Runtime ──────────────────────────────────────────────────────────
+FROM node:20-alpine AS runtime
+
+RUN apk add --no-cache python3 make g++
+
+WORKDIR /app
+
+# Solo copiar manifiestos e instalar dependencias de producción
+COPY package*.json ./
+RUN npm ci --omit=dev
+
+# Copiar el código compilado desde el stage builder
+COPY --from=builder /app/dist ./dist
+
+# Usuario no-root para mayor seguridad
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+
+EXPOSE 3000
+
+CMD ["node", "dist/app.js"]

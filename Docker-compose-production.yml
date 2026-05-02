@@ -1,0 +1,64 @@
+version: "3.9"
+
+# ── Red interna ───────────────────────────────────────────────────────────────
+networks:
+  panicbutton-prod-network:
+    driver: bridge
+
+# ── Volúmenes persistentes ────────────────────────────────────────────────────
+volumes:
+  panicbutton-mysql-prod-data:
+    driver: local
+
+services:
+
+  # ── MySQL 8 ────────────────────────────────────────────────────────────────
+  panicbutton-production-mysqldb:
+    image: mysql:8.0
+    container_name: panicbutton-production-mysqldb
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+    # Puerto NO expuesto al host en producción — solo accesible dentro de la red Docker
+    expose:
+      - "3306"
+    volumes:
+      - panicbutton-mysql-prod-data:/var/lib/mysql
+    networks:
+      - panicbutton-prod-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  # ── Backend (Express + TypeORM compilado) ─────────────────────────────────
+  panicbutton-production-api:
+    build:
+      context: .
+      dockerfile: dockerfile.production
+    container_name: panicbutton-production-api
+    restart: always
+    env_file:
+      - .env.production
+    environment:
+      DB_HOST: panicbutton-production-mysqldb
+      DB_PORT: "3306"
+      NODE_ENV: production
+    ports:
+      - "${PORT:-3000}:3000"
+    networks:
+      - panicbutton-prod-network
+    depends_on:
+      panicbutton-production-mysqldb:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 256m
