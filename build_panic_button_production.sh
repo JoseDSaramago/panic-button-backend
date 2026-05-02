@@ -62,6 +62,12 @@ if [ "$CLEAN_BUILD" = true ]; then
   log_success "Limpieza completada."
 fi
 
+# ── Pull de cambios desde main ───────────────────────────────────────────────
+log_info "Descargando últimos cambios desde origin/main..."
+git pull origin main
+log_success "Código actualizado."
+echo ""
+
 # ── Build y levantamiento en background ─────────────────────────────────────
 log_info "Construyendo imagen de producción y levantando servicios..."
 echo ""
