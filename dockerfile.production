@@ -37,6 +37,10 @@ COPY --from=builder /app/dist ./dist
 
 # Usuario no-root para mayor seguridad
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+# Crear directorio de logs y asignar permisos antes de cambiar de usuario
+RUN mkdir -p /app/logs && chown -R appuser:appgroup /app/logs
+
 USER appuser
 
 EXPOSE 3000
