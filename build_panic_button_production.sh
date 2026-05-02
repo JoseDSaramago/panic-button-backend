@@ -54,7 +54,7 @@ done
 
 if [ "$CLEAN_BUILD" = true ]; then
   log_warn "Modo --clean: bajando servicios y eliminando volúmenes..."
-  sudo docker-compose \
+  sudo docker compose \
     -f "$COMPOSE_FILE" \
     --env-file "$ENV_FILE" \
     --project-name "$PROJECT_NAME" \
@@ -72,7 +72,7 @@ echo ""
 log_info "Construyendo imagen de producción y levantando servicios..."
 echo ""
 
-sudo docker-compose \
+sudo docker compose \
   -f "$COMPOSE_FILE" \
   --env-file "$ENV_FILE" \
   --project-name "$PROJECT_NAME" \
@@ -83,4 +83,4 @@ log_success "Servicios levantados en background."
 echo ""
 log_info "Ver logs del API:   sudo docker logs -f panicbutton-production-api"
 log_info "Ver logs de MySQL:  sudo docker logs -f panicbutton-production-mysqldb"
-log_info "Detener servicios:  sudo docker-compose -f $COMPOSE_FILE --project-name $PROJECT_NAME down"
+log_info "Detener servicios:  sudo docker compose -f $COMPOSE_FILE --project-name $PROJECT_NAME down"
