@@ -51,6 +51,7 @@ services:
       DB_HOST: panicbutton-production-mysqldb
       DB_PORT: "3306"
       NODE_ENV: production
+      PORT: "3000"   # interno siempre 3000 — el mapeo externo lo define ${PORT} en ports:
     ports:
       - "${PORT:-3000}:3000"
     networks:
