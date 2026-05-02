@@ -10,12 +10,9 @@ export async function register(
 ): Promise<void> {
   try {
     const dto = registerSchema.parse(req.body);
-    const { userId } = await registerUser(dto);
-    res.status(201).json({
-      success: true,
-      userId,
-      message: 'Usuario registrado exitosamente',
-    });
+    await registerUser(dto);
+    const result = await loginUser({ phone_number: dto.phone_number, password: dto.password });
+    res.status(201).json({ success: true, ...result });
   } catch (err) {
     next(err);
   }

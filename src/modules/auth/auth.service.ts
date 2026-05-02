@@ -89,6 +89,8 @@ export async function loginUser(dto: LoginDto): Promise<{
     select: [
       'user_uuid',
       'phone_number',
+      'first_name',
+      'last_name',
       'alias',
       'email',
       'plan_status',
