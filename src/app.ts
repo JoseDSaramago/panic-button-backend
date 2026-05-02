@@ -77,7 +77,7 @@ async function bootstrap(): Promise<void> {
     await initializeDatabase();
     console.log(`✅  MySQL running → ${env.DB_HOST}:${env.DB_PORT}/${env.DB_NAME}`);
 
-    app.listen(env.PORT, () => {
+    app.listen(env.PORT, '0.0.0.0', () => {
       console.log('');
       console.log('🚀  server ok');
       console.log(`    URL:     http://localhost:${env.PORT}`);
