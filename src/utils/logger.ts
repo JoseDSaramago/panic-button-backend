@@ -1,6 +1,10 @@
+import path from 'path';
 import winston from 'winston';
 
 const { combine, timestamp, printf, colorize, errors } = winston.format;
+
+// Ruta absoluta al directorio de logs (siempre relativa a este archivo)
+const LOG_DIR = path.join(__dirname, '..', '..', 'logs');
 
 // Formato legible para consola en desarrollo
 const devFormat = combine(
@@ -27,7 +31,7 @@ export const logger = winston.createLogger({
     new winston.transports.Console(),
     // Archivo de errores siempre activo
     new winston.transports.File({
-      filename: 'logs/error.log',
+      filename: path.join(LOG_DIR, 'error.log'),
       level: 'error',
       maxsize: 5_242_880, // 5 MB
       maxFiles: 5,
